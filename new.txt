@@ -1,0 +1,12 @@
+Build a simple React + Tailwind web app called “AI Study Partner”.
+It should have two tabs: “Study Chat” and “Quiz Generator”.
+
+- The “Study Chat” tab should have:
+  • A chat box where the user types a question.
+  • The AI gives study help using the Gemini API (Google AI Studio).
+
+- The “Quiz Generator” tab should have:
+  • A text input for the topic (e.g., “Computer Networks”).
+  • A “Generate Quiz” button.
+  • Show 5 multiple-choice questions with 4 options each.
+  • After submitting, show the user’s score and correct answers.

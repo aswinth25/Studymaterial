@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Partner - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-delay-1 { animation: bounce 1s infinite; animation-delay: 0.2s; }
+        .animate-bounce-delay-2 { animation: bounce 1s infinite; animation-delay: 0.4s; }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-2">
+                AI Study Partner
+            </h1>
+            <p class="text-gray-600 text-lg">Your intelligent learning companion</p>
+            <div class="mt-4 p-3 bg-yellow-100 border border-yellow-400 rounded-lg text-yellow-800 text-sm">
+                <strong>Note:</strong> This is a demo version. To use AI features, install Node.js and run the full app.
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-1 inline-flex">
+                <button
+                    onclick="switchTab('chat')"
+                    id="chat-tab"
+                    class="px-6 py-3 rounded-md font-semibold transition-all duration-200 bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md"
+                >
+                    Study Chat
+                </button>
+                <button
+                    onclick="switchTab('quiz')"
+                    id="quiz-tab"
+                    class="px-6 py-3 rounded-md font-semibold transition-all duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                >
+                    Quiz Generator
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="bg-white rounded-xl shadow-xl p-6 md:p-8">
+            <!-- Study Chat Tab -->
+            <div id="chat-content" class="tab-content">
+                <div class="flex flex-col h-[600px]">
+                    <div class="flex-1 overflow-y-auto mb-4 space-y-4 pr-2" id="chat-messages">
+                        <div class="flex justify-start">
+                            <div class="max-w-[80%] rounded-lg px-4 py-3 bg-gray-100 text-gray-800">
+                                <p>Hello! I'm your AI Study Partner. Ask me any question and I'll help you learn!</p>
+                                <p class="mt-2 text-sm text-gray-600">(Note: AI responses require Node.js and Gemini API setup)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <form onsubmit="handleChatSubmit(event)" class="flex gap-2">
+                        <input
+                            type="text"
+                            id="chat-input"
+                            placeholder="Ask me anything about your studies..."
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <button
+                            type="submit"
+                            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                        >
+                            Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quiz Generator Tab -->
+            <div id="quiz-content" class="tab-content hidden">
+                <div class="space-y-6">
+                    <div class="flex gap-3">
+                        <input
+                            type="text"
+                            id="quiz-topic"
+                            placeholder="Enter a topic (e.g., Computer Networks, World History, Calculus...)"
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <button
+                            onclick="generateDemoQuiz()"
+                            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap"
+                        >
+                            Generate Quiz
+                        </button>
+                    </div>
+                    <div id="quiz-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let activeTab = 'chat';
+        let chatMessages = [
+            { role: 'assistant', content: 'Hello! I\'m your AI Study Partner. Ask me any question and I\'ll help you learn!\n(Note: AI responses require Node.js and Gemini API setup)' }
+        ];
+        let quizAnswers = {};
+        let quizSubmitted = false;
+        let currentQuiz = null;
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('chat-content').classList.toggle('hidden', tab !== 'chat');
+            document.getElementById('quiz-content').classList.toggle('hidden', tab !== 'quiz');
+            
+            const chatTab = document.getElementById('chat-tab');
+            const quizTab = document.getElementById('quiz-tab');
+            
+            if (tab === 'chat') {
+                chatTab.className = 'px-6 py-3 rounded-md font-semibold transition-all duration-200 bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md';
+                quizTab.className = 'px-6 py-3 rounded-md font-semibold transition-all duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-100';
+            } else {
+                chatTab.className = 'px-6 py-3 rounded-md font-semibold transition-all duration-200 text-gray-600 hover:text-gray-900 hover:bg-gray-100';
+                quizTab.className = 'px-6 py-3 rounded-md font-semibold transition-all duration-200 bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md';
+            }
+        }
+
+        function handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addChatMessage('user', message);
+            input.value = '';
+
+            // Show demo response
+            setTimeout(() => {
+                // addChatMessage('assistant', 'This is a demo version. To get AI-powered responses, please:\n\n1. Install Node.js from nodejs.org\n2. Run "npm install" in the project folder\n3. Set up your Gemini API key (GEMINI_API_KEY) in a .env file\n4. Run "npm run server" and "npm run dev"');
+            }, 500);
+        }
+
+        function addChatMessage(role, content) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+            
+            const bgClass = role === 'user' 
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                : 'bg-gray-100 text-gray-800';
+            
+            messageDiv.innerHTML = `
+                <div class="max-w-[80%] rounded-lg px-4 py-3 ${bgClass}">
+                    <p class="whitespace-pre-wrap">${content}</p>
+                </div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function generateDemoQuiz() {
+            const topic = document.getElementById('quiz-topic').value.trim();
+            if (!topic) {
+                alert('Please enter a topic');
+                return;
+            }
+
+            // Demo quiz data
+            currentQuiz = {
+                questions: [
+                    {
+                        question: `What is a key concept in ${topic}?`,
+                        options: ['Option A: Basic principle', 'Option B: Advanced technique', 'Option C: Common mistake', 'Option D: Historical fact'],
+                        correctAnswer: 0
+                    },
+                    {
+                        question: `Which of the following is most important in ${topic}?`,
+                        options: ['Option A: Understanding fundamentals', 'Option B: Memorizing facts', 'Option C: Following trends', 'Option D: Avoiding practice'],
+                        correctAnswer: 0
+                    },
+                    {
+                        question: `A common application of ${topic} includes:`,
+                        options: ['Option A: Real-world scenarios', 'Option B: Theoretical only', 'Option C: Limited use cases', 'Option D: No practical value'],
+                        correctAnswer: 0
+                    },
+                    {
+                        question: `When studying ${topic}, you should focus on:`,
+                        options: ['Option A: Active learning', 'Option B: Passive reading', 'Option C: Skipping basics', 'Option D: Avoiding questions'],
+                        correctAnswer: 0
+                    },
+                    {
+                        question: `The best way to master ${topic} is:`,
+                        options: ['Option A: Practice and review', 'Option B: One-time reading', 'Option C: Avoiding examples', 'Option D: Ignoring concepts'],
+                        correctAnswer: 0
+                    }
+                ]
+            };
+
+            quizAnswers = {};
+            quizSubmitted = false;
+            renderQuiz();
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            if (!currentQuiz) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-500"><p class="text-lg">Enter a topic above to generate a quiz!</p></div>';
+                return;
+            }
+
+            let html = '';
+            currentQuiz.questions.forEach((q, qIndex) => {
+                html += `
+                    <div class="border border-gray-200 rounded-lg p-6 bg-gray-50 hover:shadow-md transition-shadow">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">${qIndex + 1}. ${q.question}</h3>
+                        <div class="space-y-2">
+                `;
+                q.options.forEach((option, oIndex) => {
+                    const isSelected = quizAnswers[qIndex] === oIndex;
+                    const isCorrect = oIndex === q.correctAnswer;
+                    const isWrong = quizSubmitted && isSelected && !isCorrect;
+                    
+                    let bgClass = 'bg-white border-2 border-gray-200 hover:border-blue-300';
+                    let textClass = 'text-gray-700';
+                    
+                    if (quizSubmitted) {
+                        if (isCorrect) {
+                            bgClass = 'bg-green-100 border-2 border-green-500';
+                            textClass = 'text-green-800 font-semibold';
+                        } else if (isWrong) {
+                            bgClass = 'bg-red-100 border-2 border-red-500';
+                            textClass = 'text-red-800';
+                        } else {
+                            bgClass = 'bg-gray-100';
+                        }
+                    } else if (isSelected) {
+                        bgClass = 'bg-blue-100 border-2 border-blue-500';
+                    }
+                    
+                    html += `
+                        <label class="flex items-center p-3 rounded-lg cursor-pointer transition-all ${bgClass} ${quizSubmitted ? '' : 'cursor-pointer'}" ${quizSubmitted ? '' : `onclick="selectAnswer(${qIndex}, ${oIndex})"`}>
+                            <input
+                                type="radio"
+                                name="question-${qIndex}"
+                                ${isSelected ? 'checked' : ''}
+                                ${quizSubmitted ? 'disabled' : ''}
+                                class="mr-3 w-4 h-4 text-blue-600"
+                            />
+                            <span class="flex-1 ${textClass}">${option}</span>
+                            ${quizSubmitted && isCorrect ? '<span class="text-green-600 font-bold ml-2">✓</span>' : ''}
+                            ${quizSubmitted && isWrong ? '<span class="text-red-600 font-bold ml-2">✗</span>' : ''}
+                        </label>
+                    `;
+                });
+                html += `</div></div>`;
+            });
+
+            if (!quizSubmitted) {
+                html += `
+                    <div class="flex justify-center pt-4">
+                        <button
+                            onclick="submitQuiz()"
+                            class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg"
+                        >
+                            Submit Answers
+                        </button>
+                    </div>
+                `;
+            } else {
+                let score = 0;
+                currentQuiz.questions.forEach((q, index) => {
+                    if (quizAnswers[index] === q.correctAnswer) score++;
+                });
+                html += `
+                    <div class="text-center py-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Quiz Results</h3>
+                        <p class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-2">
+                            ${score} / ${currentQuiz.questions.length}
+                        </p>
+                        <p class="text-gray-600">
+                            ${score === currentQuiz.questions.length ? 'Perfect score! 🎉' : score >= currentQuiz.questions.length * 0.7 ? 'Great job! 👍' : 'Keep studying! 💪'}
+                        </p>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function selectAnswer(questionIndex, answerIndex) {
+            if (quizSubmitted) return;
+            quizAnswers[questionIndex] = answerIndex;
+            renderQuiz();
+        }
+
+        function submitQuiz() {
+            quizSubmitted = true;
+            renderQuiz();
+        }
+    </script>
+</body>
+</html>
+
